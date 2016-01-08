@@ -7,7 +7,6 @@ var _ = require("underscore");
 var todos = [];
 var todoNextId = 1;
 
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
@@ -36,7 +35,6 @@ app.get('/todos/:id',function(req,res){
 });
 
 //POST  /todos/
-
 app.post('/todos', function(req,res){
     var body = _.pick(req.body,'description','completed');
     // use .pick to get only description and completed
@@ -52,6 +50,20 @@ app.post('/todos', function(req,res){
     todos.push(body);
     res.json(body);
 });
+
+// DELETE /todos/:id
+app.delete('/todos/:id',function(req,res){
+    var idToDo = parseInt(req.params.id,10);
+    var matchToDo = _.findWhere(todos,{id:idToDo});
+    if(!matchToDo)
+        res.status(400).send();
+    else {
+        todos = _.without(todos, matchToDo);
+        res.json(matchToDo);
+    }
+
+});
+
 
 app.listen(PORT,function(){
     console.log('express listening on port ' +  PORT + '!');
