@@ -16,10 +16,17 @@ app.get('/',function(req,res){
     res.send('todo api root');
 });
 
-// GET /todos
+// GET /todos?completed=true
 app.get('/todos',function(req,res){
-   res.json(todos);
+    var queryParams = req.query;
+    var filteredToDos = todos;
 
+    if(queryParams.hasOwnProperty('completed') && queryParams.completed === 'true'){
+        filteredToDos  = _.where(filteredToDos, {completed:true});
+    }else if(queryParams.hasOwnProperty('completed') && queryParams.completed === 'false'){
+        filteredToDos = _.where(filteredToDos,{completed:false});
+    }
+   res.json(filteredToDos);
 });
 
 //GET /todos/2
