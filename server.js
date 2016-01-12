@@ -40,12 +40,16 @@ app.get('/todos',function(req,res){
 app.get('/todos/:id',function(req,res){
     var todoId = parseInt(req.params.id,10);
     // find the todo in the todos array
-    var matchedToDo = _.findWhere(todos,{id:todoId});
+    db.todo.findById(todoId).then(function(todo){
+        if(!!todo)
+            return res.json(todo.toJSON());
+        else
+            return res.status(400).send();
 
-    if(matchedToDo){
-        return res.json(matchedToDo);
-    }else
-        return res.status(404).send();
+    }, function(e){
+        return res.status(500).send();
+    });
+
 });
 
 //POST  /todos/
@@ -54,23 +58,9 @@ app.post('/todos', function(req,res){
     // use .pick to get only description and completed
     db.todo.create(body).then(function(todo){
         res.json(todo.toJSON());
-       /* Todo.create({
-            description: body.description.trim()
-        });*/
-       // return res.status(200).json(body.description.trim())
     }, function(e){
         return res.status(400).json(e);
     });
-/*    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0 ){
-        return res.status(400).send();
-    }
-
-    // set body.description to be trimmed value
-    body.description = body.description.trim();
-
-    body.id = todoNextId++;
-    todos.push(body);
-    res.json(body);*/
 });
 
 // DELETE /todos/:id
