@@ -124,25 +124,17 @@ app.post('/users', function(req,res){
 
 // POST /users/login
 app.post('/users/login', function(req,res){
-    var query = _.pick(req.body,'email','password');
-    if(typeof query.email !== 'string' && typeof query.password !== 'string'){
-        return res.status(400).send();
-    }
+    var body = _.pick(req.body,'email','password');
 
-    db.user.findOne({where:{
-            email:query.email
-        }
-    }).then(function(user){
-        if(!user || !bcrypt.compareSync(query.password,user.get('password_hash'))) return res.status(401).send();
-
-
+    db.user.authenticate(body).then(function(user){
         res.json(user.toPublicJSON());
-    }), function(e){
-        return res.status(500).json(e);
-    };
+    }, function(){
+        res.status(401).send();
+    });
+
 })
 
-db.sequelize.sync().then(function(){
+db.sequelize.sync({force:true}).then(function(){
     app.listen(PORT,function(){
         console.log('express listening on port ' +  PORT + '!');
     });
