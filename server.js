@@ -4,6 +4,7 @@ var PORT = process.env.PORT || 3000;
 var bodyParser = require('body-parser');
 var _ = require("underscore");
 var db = require('./db.js');
+var bcrypt = require('bcrypt');
 
 var todos = [];
 var todoNextId = 1;
@@ -120,6 +121,26 @@ app.post('/users', function(req,res){
     });
 
 });
+
+// POST /users/login
+app.post('/users/login', function(req,res){
+    var query = _.pick(req.body,'email','password');
+    if(typeof query.email !== 'string' && typeof query.password !== 'string'){
+        return res.status(400).send();
+    }
+
+    db.user.findOne({where:{
+            email:query.email
+        }
+    }).then(function(user){
+        if(!user || !bcrypt.compareSync(query.password,user.get('password_hash'))) return res.status(401).send();
+
+
+        res.json(user.toPublicJSON());
+    }), function(e){
+        return res.status(500).json(e);
+    };
+})
 
 db.sequelize.sync().then(function(){
     app.listen(PORT,function(){
