@@ -22,7 +22,10 @@ app.get('/',function(req,res){
 // GET /todos?completed=true&q=work
 app.get('/todos',middleware.requireAuthentication,function(req,res){
     var query = req.query;
-    var where ={};
+    var where ={
+        userId: req.user.get('id')
+    };
+
     if(query.hasOwnProperty('completed') && query.completed === 'true')
         where.completed =true;
     else if(query.hasOwnProperty('completed') && query.completed === 'false')
@@ -44,8 +47,12 @@ app.get('/todos',middleware.requireAuthentication,function(req,res){
 //GET /todos/2
 app.get('/todos/:id',middleware.requireAuthentication,function(req,res){
     var todoId = parseInt(req.params.id,10);
+    var where ={
+        id: todoId,
+        userId: req.user.get('id')
+    };
     // find the todo in the todos array
-    db.todo.findById(todoId).then(function(todo){
+    db.todo.findOne({where:where}).then(function(todo){
         if(!!todo)
             return res.json(todo.toJSON());
         else
@@ -75,9 +82,13 @@ app.post('/todos',middleware.requireAuthentication, function(req,res){
 // DELETE /todos/:id
 app.delete('/todos/:id',middleware.requireAuthentication,function(req,res){
     var idToDo = parseInt(req.params.id,10);
+    var where ={
+        id: idToDo,
+        userId: req.user.get('id')
+    };
 
     db.todo.destroy({
-        where:{id:idToDo}
+        where:where
     }).then(function(todo){
         if(todo>0)
             res.status(204).send();
@@ -93,6 +104,10 @@ app.put('/todos/:id',middleware.requireAuthentication, function(req,res){
     var idToDo = parseInt(req.params.id,10);
     var body = _.pick(req.body,'description','completed');
     var attributes = {};
+    var where ={
+        id: idToDo,
+        userId: req.user.get('id')
+    };
 
     if(body.hasOwnProperty('completed')){
         attributes.completed = body.completed;
@@ -102,7 +117,7 @@ app.put('/todos/:id',middleware.requireAuthentication, function(req,res){
         attributes.description = body.description;
     }
 
-    db.todo.findById(idToDo).then(function(todo){
+    db.todo.findOne({where:where}).then(function(todo){
         if(todo){
             todo.update(attributes).then(function(todo){
                 res.json(todo)
